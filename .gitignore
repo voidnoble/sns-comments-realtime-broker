@@ -1,0 +1,4 @@
+.idea
+dump.rdb
+/node/data/
+node/config/secrets.json

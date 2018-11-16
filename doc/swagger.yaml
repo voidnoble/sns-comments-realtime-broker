@@ -1,0 +1,293 @@
+# this is an example of the Uber API
+# as a demonstration of an API spec in YAML
+swagger: '2.0'
+info:
+  title: 라이브방송 의견들 브로커
+  description: 라이브방송 서비스들의 최신 영상의 채팅이나 의견 API 조회 브로커
+  version: "1.0.0"
+# the domain of the service
+host: callback.yourdomain.com
+# array of all schemes that your API supports
+schemes:
+  - https
+# will be prefixed to all paths
+#basePath: /v1
+produces:
+  - application/json
+  - text/html
+
+paths:
+  /comments:
+    get:
+      summary: 의견들 모듬
+      description: |
+        라이브 방송 최신 영상의 최근 의견들 모두 모음.
+        의견들은 시간순으로 리스팅.
+      parameters:
+        - name: format
+          in: query
+          description: '응답 데이터 형식. 필수아님. 값: csv 또는 json. 기본값: JSON'
+          required: false
+          type: string
+          format: enum
+        - name: status
+          in: query
+          description: '가장 최근 영상 데이터 조회 여부. 필수아님. 값: latest'
+          required: false
+          type: string
+          format: latest
+        - name: force
+          in: query
+          description: '강제 데이터 조회 여부. 필수아님. 사용시 status 함께 사용. 값: yes'
+          required: false
+          type: string
+          format: enum
+      tags:
+        - 의견들
+      responses:
+        200:
+          description: 의견 JSON 배열 또는 CSV 문자열
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Comment'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+  /youtube/livechat:
+    get:
+      summary: Youtube 라이브 채팅 목록 조회
+      description: |
+        * 기본 동작
+          - 가장 최근의 라이브 영상의 라이브 채팅 리스트를 조회
+          - 가장 최근의 라이브 영상이 없다면 조회하지 않음
+        * 필터링
+          - 이미 조회했던 채팅 데이터는 조회하지 않도록 처리함
+      parameters:
+        - name: videoId
+          in: query
+          description: 지정하면 해당 영상에서 데이터 조회. 최신 라이브 영상 조회.
+          required: false
+          type: string
+          format: string
+        - name: liveChatId
+          in: query
+          description: 지정하면 해당 라이브 채팅 데이터 조회. 최신 라이브 영상의 라이브 채팅 조회.
+          required: false
+          type: string
+          format: string
+        - name: format
+          in: query
+          description: '응답 데이터 형식. 필수아님. 값: csv 또는 json. 기본값: JSON'
+          required: false
+          type: string
+          format: string
+        - name: force
+          in: query
+          description: '강제 데이터 조회 여부. 필수아님. 값: yes'
+          required: false
+          type: string
+          format: enum
+      tags:
+        - Youtube
+      responses:
+        200:
+          description: 의견 JSON 배열 또는 CSV 문자열
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Comment'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  
+  /facebook/live_videos/live_views:
+    get:
+      summary: Facebook 라이브 영상 시청자 수
+      description: 가장 최근의 라이브 영상의 현재 시청자 수 조회
+      tags:
+        - Facebook
+      responses:
+        200:
+          description: 시청자 수
+          schema:
+            type: integer
+            format: int32
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  
+  /facebook/comments:
+    get:
+      summary: Facebook 라이브 영상 최근 의견들
+      description: |
+        * 기본 동작
+          - 가장 최근의 라이브 영상의 코멘트 리스트를 조회
+        * 필터링
+          - 이미 조회했던 채팅 데이터는 조회하지 않도록 처리중
+      parameters:
+        - name: videoId
+          in: query
+          description: 지정하면 해당 영상에서 데이터 조회. 최신 라이브 영상 조회.
+          required: false
+          type: string
+          format: string
+        - name: liveChatId
+          in: query
+          description: 지정하면 해당 라이브 채팅 데이터 조회. 최신 라이브 영상의 라이브 채팅 조회.
+          required: false
+          type: string
+          format: string
+        - name: format
+          in: query
+          description: '응답 데이터 형식. 필수아님. 값: csv 또는 json. 기본값: JSON'
+          required: false
+          type: string
+          format: enum
+        - name: status
+          in: query
+          description: 영상 상태로 선택. latest | live | vod | live_stopped
+          required: false
+          type: string
+          format: enum
+        - name: force
+          in: query
+          description: '강제 데이터 조회 여부. 필수아님. 사용시 status 함께 사용. 값: yes'
+          required: false
+          type: string
+          format: enum
+      tags:
+        - Facebook
+      responses:
+        200:
+          description: 의견 JSON 배열 또는 CSV 문자열
+          schema:
+            $ref: '#/definitions/Comment'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  
+  /afreecatv/chat:
+    get:
+      summary: 아프리카TV 채팅 메세지들
+      description: Redis Queue에 쌓인 아프리카TV 채팅 메세지들 조회하고 포맷팅 후 반환.
+      parameters:
+        - name: bj_id
+          in: query
+          required: false
+          type: string
+          format: string
+          description: 'BJ 아이디. http://m.afreecatv.com/#/player/${bj_id}/${broad_no}'
+        - name: broad_no
+          in: query
+          required: false
+          type: integer
+          format: int32
+          description: '방송 번호. http://m.afreecatv.com/#/player/${bj_id}/${broad_no}'
+        - name: force
+          in: query
+          description: '강제 데이터 조회 여부. 필수아님. 값: yes'
+          required: false
+          type: string
+          format: enum
+      tags:
+        - 아프리카TV
+      responses:
+        200:
+          description: 의견 JSON 배열 또는 CSV 문자열
+          schema:
+            $ref: '#/definitions/Comment'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+  /afreecatv/chat/producer/{action}:
+    get:
+      summary: 아프리카TV 채팅 메세지 스트림 프로듀서 제어
+      description: |
+        아프리카TV 채팅 웹소켓에 접속해서 스트림을 받고 스트림들을 프로듀싱하여 Redis Queue에 저장.
+        프로듀서는 소켓에 계속 접속해 있어야 되므로 자식 프로세스(=데몬)로 띄움.
+      parameters:
+        - name: action
+          in: path
+          required: true
+          type: string
+          format: enum
+          description: '"start" 또는 "stop"'
+        - name: bj_id
+          in: query
+          required: false
+          type: string
+          format: string
+          description: 'BJ 아이디. http://m.afreecatv.com/#/player/${bj_id}/${broad_no}'
+        - name: broad_no
+          in: query
+          required: false
+          type: integer
+          format: int32
+          description: '방송 번호. http://m.afreecatv.com/#/player/${bj_id}/${broad_no}'
+      tags:
+        - 아프리카TV
+      responses:
+        200:
+          description: 실행됨. 종료됨. 안내 문구.
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+definitions:
+  Comment:
+    type: object
+    properties:
+      id:
+        type: string
+        description: 의견 고유 아이디
+      origin:
+        type: string
+        format: youtube | facebook | afreecatv
+        description: 출처
+      kind:
+        type: string
+        format: comment | chat
+        description: 출처 서비스 종류
+      userName:
+        type: string
+        format: 아무개
+        description: 사용자 이름
+      userImage:
+        type: string
+        format: user.png
+        description: 사용자 프로필 이미지
+      message:
+        type: string
+        format: string
+        description: 메세지 본문 TEXT
+      messageOriginal:
+        type: string
+        format: 이것은 <b>메세지</b> 입니다.
+        description: HTML 포함 메세지 원문
+      publishedAt:
+        type: string
+        format: date
+        description: 2016-08-02T00:20:35+0000 | 14323341 KST
+      updatedAt:
+        type: string
+        format: date
+        description: 2016-08-02T00:20:35+0000 | 14323341 KST
+  Error:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
+      fields:
+        type: string
